@@ -189,11 +189,11 @@ SET aqe_enable = on; -- если ещё не включен
 -- выполнить запрос несколько раз с разными значениями aqe_sql_execution_time_trigger:
 -- возьмём значения по несколько секунд
 set aqe_sql_execution_time_trigger = 30000;
-\i ~/30с.sql;
+\i ~/30c.sql;
 set aqe_sql_execution_time_trigger = 10000;
-\i ~/30с.sql;
+\i ~/30c.sql;
 set aqe_sql_execution_time_trigger = 5000;
-\i ~/30с.sql;
+\i ~/30c.sql;
 
 -- захват закончили выключаем
 SET pgpro_multiplan.auto_capturing = off; -- ! выключаем обязательно иначе не сработают разрешенные планы
@@ -433,6 +433,7 @@ set pgpro_planner.memoize_subplan = ON;
 \i ~/job_memoize.sql;
 
 -- Что вы заметили в изменениях?
+
 
 
 
