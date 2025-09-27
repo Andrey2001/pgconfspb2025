@@ -176,6 +176,7 @@ SELECT pgpro_multiplan_reset();
 -- доп команды проверки, что всё установлено
 \dconfig *aqe*
 \dx
+\dv
 \dconfig pgpro_multi*
 SHOW shared_preload_libraries;
 
@@ -200,6 +201,17 @@ SET pgpro_multiplan.auto_capturing = off; -- ! выключаем обязате
 -- видим несколько захваченных планов
 SELECT left(query_string, 100), dbid, sql_hash, plan_hash, cost FROM pgpro_multiplan_captured_queries;
 -- какой из них лучше по вашему мнению?
+--                                     left                                     | dbid |      sql_hash       |      plan_hash       |     cost
+-- -----------------------------------------------------------------------------+------+---------------------+----------------------+--------------------
+--  SELECT MIN(mi.info) AS movie_budget,                                       +|    5 | 6251091346033266000 |   -52356214523280641 | 17985.755987622757
+--         MIN(mi_idx.info) AS movie_votes,                                    +|      |                     |                      |
+--         MIN(n.name) AS w                                                     |      |                     |                      |
+--  SELECT s.name AS "Parameter", pg_catalog.current_setting(s.name) AS "Value"+|    5 | 3248707178069435472 | -6939563903564495251 | 15.0225
+--  FROM pg_catalog.pg_setti                                                    |      |                     |                      |
+--  SELECT MIN(mi.info) AS movie_budget,                                       +|    5 | 6251091346033266000 | -3233104676300122008 | 4472.034143105042
+--         MIN(mi_idx.info) AS movie_votes,                                    +|      |                     |                      |
+--         MIN(n.name) AS w                                                     |      |                     |                      |
+-- (3 rows)
 
 -- в хранилище разрешенных и замороженных пока пусто - 
 -- значит оптимизатор пока ничего не будет использовать еще
@@ -215,6 +227,14 @@ SELECT pgpro_multiplan_captured_approve(:dbid, :sql_hash, :plan_hash);
 
 -- проверяем что добавился в разрешенные
 SELECT left(query_string, 100), dbid, sql_hash, plan_hash, cost FROM pgpro_multiplan_storage;
+--                   left                   | dbid |      sql_hash       |     plan_hash      |        cost
+-- -----------------------------------------+------+---------------------+--------------------+--------------------
+--  SELECT MIN(mi.info) AS movie_budget,   +|    5 | 6251091346033266000 | -52356214523280641 | 17985.755987622757
+--         MIN(mi_idx.info) AS movie_votes,+|      |                     |                    |
+--         MIN(n.name) AS w                 |      |                     |                    |
+-- (1 row)
+
+SET aqe_enable = off;
 
 -- должны увидеть кастомную ноду мультиплана с информацией
 \i ~/30c.sql;
@@ -231,6 +251,7 @@ SELECT left(query_string, 100), dbid, sql_hash, plan_hash, cost FROM pgpro_multi
 -- Настроим нужные параметры
 SET pgpro_multiplan.mode = 'baseline';
 SET pgpro_multiplan.aqe_mode = 'auto_approve_plans';
+SET aqe_enable = on;
 
 -- выполнить запрос с некоторым значением aqe_sql_execution_time_trigger, например 1000
 \i ~/16b.sql;
@@ -243,9 +264,6 @@ SET aqe_enable = off;
 -- повторяем запрос, он должен быть из разрешённых
 \i ~/16b.sql;
 
---Поиграйтесь с параметром aqe_sql_execution_time_trigger - в auto_approve_plans режиме
--- Что у вас получилось?
-
 
 ------------------------------------------------------------------
 --
@@ -255,10 +273,10 @@ SET aqe_enable = off;
 ------------------------------------------------------------------
 
 -- 5 Поставим aqe мод в сбор статистики: aqe_statistics
-SET pgpro_multiplan.aqe_mode = 'statistics'
+SET pgpro_multiplan.aqe_mode = 'statistics';
 SET aqe_enable = on;
 
--- Используем для удобства такое представление
+-- Создаём для удобства такое представление
 create view aqe_stats_tmp as
 select sql_hash, planid, left(query,100), last_updated, exec_num, min_attempts, max_attempts, 
 total_attempts, reason_repeated_plan, reason_no_data, reason_max_reruns, reason_external, reruns_forced , 
@@ -269,7 +287,34 @@ mean_planning_time, stddev_planning_time, min_exec_time, max_exec_time, mean_exe
 \i ~/19b.sql;
 
 select * from aqe_stats_tmp \gx
-
+-- -[ RECORD 1 ]----------+---------------------------------------------
+-- sql_hash               | -1905835497816146276
+-- planid                 | 2410723918756208619
+-- left                   | SELECT MIN(n.name) AS voicing_actress,      +
+--                        |        MIN(t.title) AS jap_engl_voiced_movie+
+--                        | FROM aka_name AS
+-- last_updated           | 2025-09-27 16:50:21.019078+00
+-- exec_num               | 1
+-- min_attempts           | 4
+-- max_attempts           | 4
+-- total_attempts         | 4
+-- reason_repeated_plan   | 0
+-- reason_no_data         | 0
+-- reason_max_reruns      | 0
+-- reason_external        | 0
+-- reruns_forced          | 0
+-- reruns_time            | 0
+-- reruns_underestimation | 4
+-- reruns_memory          | 0
+-- min_planning_time      | 140942.774109
+-- max_planning_time      | 140942.774109
+-- mean_planning_time     | 140942.774109
+-- stddev_planning_time   | 0
+-- min_exec_time          | 11429.874643
+-- max_exec_time          | 11429.874643
+-- mean_exec_time         | 11429.874643
+-- stddev_exec_time       | 0
+-- ...
 -- Попробуйте выполнить запрос с другими параметрами по AQE или другие ранее рассматриваемые нами запросы.. 
 -- Какую информацию о статистики вы найдете? 
 
@@ -386,5 +431,6 @@ set pgpro_planner.memoize_subplan = ON;
 \i ~/job_memoize.sql;
 
 -- Что вы заметили в изменениях?
+
 
 
