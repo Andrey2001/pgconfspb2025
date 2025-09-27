@@ -1,0 +1,7 @@
+export PATH=/opt/pgpro/ent-17/bin:$PATH
+#For example
+USER=user01
+PORT=5433
+LOGFILE=/home/user01/logfile
+IP=178.72.130.28
+ssh user01@178.72.130.28
