@@ -194,6 +194,9 @@ set aqe_sql_execution_time_trigger = 10000;
 set aqe_sql_execution_time_trigger = 5000;
 \i ~/30с.sql;
 
+-- захват закончили выключаем
+SET pgpro_multiplan.auto_capturing = off; -- ! выключаем обязательно иначе не сработают разрешенные планы
+
 -- видим несколько захваченных планов
 SELECT left(query_string, 100), dbid, sql_hash, plan_hash, cost FROM pgpro_multiplan_captured_queries;
 -- какой из них лучше по вашему мнению?
@@ -212,10 +215,6 @@ SELECT pgpro_multiplan_captured_approve(:dbid, :sql_hash, :plan_hash);
 
 -- проверяем что добавился в разрешенные
 SELECT left(query_string, 100), dbid, sql_hash, plan_hash, cost FROM pgpro_multiplan_storage;
-
---XXX: переместить сюда это лучше?
--- Отключаем, так как мы план одобрили и готовы его использовать!
-SET pgpro_multiplan.auto_capturing = off; -- ! выключаем захват иначе не сработает разрешенный план
 
 -- должны увидеть кастомную ноду мультиплана с информацией
 \i ~/30c.sql;
@@ -387,4 +386,5 @@ set pgpro_planner.memoize_subplan = ON;
 \i ~/job_memoize.sql;
 
 -- Что вы заметили в изменениях?
+
 
