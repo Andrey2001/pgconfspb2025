@@ -188,11 +188,11 @@ SET aqe_enable = on; -- если ещё не включен
 
 -- выполнить запрос несколько раз с разными значениями aqe_sql_execution_time_trigger:
 -- возьмём значения по несколько секунд
-set aqe_sql_execution_time_trigger = 30000;
+set aqe_sql_execution_time_trigger = 2000;
 \i ~/30c.sql;
-set aqe_sql_execution_time_trigger = 10000;
+set aqe_sql_execution_time_trigger = 1000;
 \i ~/30c.sql;
-set aqe_sql_execution_time_trigger = 5000;
+set aqe_sql_execution_time_trigger = 500;
 \i ~/30c.sql;
 
 -- захват закончили выключаем
@@ -433,6 +433,7 @@ set pgpro_planner.memoize_subplan = ON;
 \i ~/job_memoize.sql;
 
 -- Что вы заметили в изменениях?
+
 
 
 
